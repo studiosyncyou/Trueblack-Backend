@@ -16,9 +16,27 @@ Rails.application.routes.draw do
   # API Routes
   namespace :api do
     namespace :v1 do
+      # Authentication routes
+      post 'auth/send-otp', to: 'auth#send_otp'
+      post 'auth/verify-otp', to: 'auth#verify_otp'
+      post 'auth/refresh-token', to: 'auth#refresh_token'
+      post 'auth/logout', to: 'auth#logout'
+
+      # User profile routes
+      get 'users/me', to: 'users#show'
+      put 'users/me', to: 'users#update'
+
+      # Menu routes (cached from Rista)
+      get 'menu', to: 'menu#index'
+      post 'menu/sync', to: 'menu#sync'
+      get 'menu/sync_status', to: 'menu#sync_status'
+
+      # Orders (user history + create, proxied to Rista)
+      resources :orders, only: [:index, :show, :create]
+
+      # Stores
       resources :stores, only: [ :index, :show ]
       resources :menu_items, only: [ :show ]
-      resources :orders, only: [:create, :index]
     end
   end
 end

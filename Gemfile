@@ -13,6 +13,13 @@ gem "thruster", require: false
 
 gem "bcrypt", "~> 3.1.7"
 
+# Authentication
+gem "jwt"
+gem "twilio-ruby"
+
+# HTTP client for Rista API
+gem "httparty"
+
 gem "graphql"
 gem "graphiql-rails"
 
