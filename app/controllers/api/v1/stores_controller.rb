@@ -1,6 +1,8 @@
 module Api
   module V1
     class StoresController < ApplicationController
+      skip_before_action :authenticate_user!, only: [:index, :show]
+
       def index
         stores = Store.all
         render json: stores
