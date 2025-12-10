@@ -45,8 +45,8 @@ module Api
         end
 
         # 3. Proxy to Rista API (outside transaction)
-        #proxy_to_rista(@order)
-        render json: { error: 'Order creation failed', message: e.message }
+        proxy_to_rista(@order)
+
         # 4. Return response
         render json: transform_order_response(@order), status: :created
 
