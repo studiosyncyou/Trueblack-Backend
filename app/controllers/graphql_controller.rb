@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 class GraphqlController < ApplicationController
+  # Skip authentication for GraphQL playground
+  skip_before_action :authenticate_user!, only: [:execute]
+
   # If accessing from outside this domain, nullify the session
   # This allows for outside API access while preventing CSRF attacks,
   # but you'll have to authenticate your user separately
