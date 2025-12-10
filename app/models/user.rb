@@ -2,6 +2,7 @@ class User < ApplicationRecord
   has_secure_password validations: false
 
   has_many :refresh_tokens, dependent: :destroy
+  has_many :orders, dependent: :destroy
 
   validates :phone, presence: true, uniqueness: true, format: { with: /\A\+?[1-9]\d{1,14}\z/, message: "must be a valid E.164 format" }
   validates :name, presence: true
