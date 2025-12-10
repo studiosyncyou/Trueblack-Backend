@@ -7,7 +7,7 @@ module Types
     field :store_id, ID, null: true
     field :branch_code, String, null: true
     field :status, String, null: false
-    field :total_amount, Float, null: false
+    field :total_amount, Float, null: true, description: "Total order amount (computed from items if null)"
     field :payment_method, String, null: true
     field :order_type, String, null: true
     field :notes, String, null: true
