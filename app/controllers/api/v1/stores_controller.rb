@@ -5,18 +5,10 @@ module Api
 
       def index
         stores = Store.all.map do |store|
-          {
-            id: store.id,
-            name: store.name,
-            space_name: store.space_name,
-            area: store.area,
-            address: store.address,
-            phone: store.phone,
-            latitude: store.latitude&.to_f,
-            longitude: store.longitude&.to_f,
-            hours: store.hours,
-            branch_code: store.branch_code || 'KKT' # Default to KKT if not set
-          }
+          store_json = store.as_json
+          # Add branch_code field, defaulting to 'KKT' if not present
+          store_json['branch_code'] = store.respond_to?(:branch_code) ? (store.branch_code || 'KKT') : 'KKT'
+          store_json
         end
         render json: stores
       end
