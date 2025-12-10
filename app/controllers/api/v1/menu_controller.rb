@@ -1,7 +1,7 @@
 module Api
   module V1
     class MenuController < ApplicationController
-      skip_before_action :authenticate_user!, only: [:index]
+      skip_before_action :authenticate_user!, only: [:index, :sync, :sync_status]
 
       # GET /api/v1/menu?store_id=1
       # Returns cached menu from database (synced from Rista)
