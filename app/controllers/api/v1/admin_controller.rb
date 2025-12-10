@@ -41,6 +41,43 @@ module Api
           }, status: :internal_server_error
         end
       end
+
+      # GET /api/v1/admin/test-rista
+      def test_rista
+        begin
+          rista_api = RistaApiService.new
+
+          # Check if config is valid
+          config_valid = rista_api.validate_config
+
+          # Try to get catalog
+          catalog = rista_api.get_catalog('KKT', 'Dine In')
+
+          render json: {
+            success: true,
+            message: "✅ Rista API working!",
+            config_valid: config_valid,
+            catalog_items_count: catalog.dig('items')&.length || 0,
+            sample_item: catalog.dig('items')&.first
+          }, status: :ok
+
+        rescue RistaApiService::RistaApiError => e
+          render json: {
+            success: false,
+            error_type: "RistaApiError",
+            message: e.message,
+            hint: "Check RISTA_API_KEY, RISTA_SECRET, and RISTA_API_BASE_URL environment variables"
+          }, status: :bad_gateway
+
+        rescue StandardError => e
+          render json: {
+            success: false,
+            error_type: e.class.name,
+            message: e.message,
+            backtrace: e.backtrace.first(5)
+          }, status: :internal_server_error
+        end
+      end
     end
   end
 end
