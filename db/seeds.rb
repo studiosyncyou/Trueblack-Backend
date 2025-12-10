@@ -10,55 +10,60 @@ puts "🌱 Starting Database Seed..."
 # 1. STORES
 # ==========================================
 stores_data = [
-  { 
-    name: 'Kompally', 
+  {
+    name: 'Kompally',
     space_name: 'Soft Sand',
     area: 'Kompally',
-    address: 'Financial District, Kompally, Hyderabad', 
+    address: 'Financial District, Kompally, Hyderabad',
     phone: '+91 98765 43210',
     latitude: 17.5367,
     longitude: 78.4878,
-    hours: '7:00 AM - 11:00 PM'
+    hours: '7:00 AM - 11:00 PM',
+    branch_code: 'KKT'
   },
-  { 
-    name: 'Jubilee Hills', 
+  {
+    name: 'Jubilee Hills',
     space_name: 'Modern Beige',
     area: 'Jubilee Hills',
-    address: 'Road No. 36, Jubilee Hills, Hyderabad', 
+    address: 'Road No. 36, Jubilee Hills, Hyderabad',
     phone: '+91 98765 43211',
     latitude: 17.4326,
     longitude: 78.4071,
-    hours: '7:00 AM - 11:00 PM'
+    hours: '7:00 AM - 11:00 PM',
+    branch_code: 'KKT'
   },
-  { 
-    name: 'Loft', 
+  {
+    name: 'Loft',
     space_name: 'Oak Moss',
     area: 'Madhapur',
-    address: 'HITEC City, Madhapur, Hyderabad', 
+    address: 'HITEC City, Madhapur, Hyderabad',
     phone: '+91 98765 43212',
     latitude: 17.4483,
     longitude: 78.3915,
-    hours: '8:00 AM - 12:00 AM'
+    hours: '8:00 AM - 12:00 AM',
+    branch_code: 'KKT'
   },
-  { 
-    name: 'Film Nagar', 
+  {
+    name: 'Film Nagar',
     space_name: 'Burnt Earth',
     area: 'Film Nagar',
-    address: 'Film Nagar, Jubilee Hills, Hyderabad', 
+    address: 'Film Nagar, Jubilee Hills, Hyderabad',
     phone: '+91 98765 43213',
     latitude: 17.4134,
     longitude: 78.4084,
-    hours: '7:00 AM - 11:00 PM'
+    hours: '7:00 AM - 11:00 PM',
+    branch_code: 'KKT'
   },
-  { 
-    name: 'Kokapet', 
+  {
+    name: 'Kokapet',
     space_name: 'Travertine',
     area: 'Kokapet',
-    address: 'Financial District, Kokapet, Hyderabad', 
+    address: 'Financial District, Kokapet, Hyderabad',
     phone: '+91 98765 43214',
     latitude: 17.3956,
     longitude: 78.3323,
-    hours: '7:00 AM - 11:00 PM'
+    hours: '7:00 AM - 11:00 PM',
+    branch_code: 'KKT'
   }
 ]
 
