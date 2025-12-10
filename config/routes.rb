@@ -37,6 +37,9 @@ Rails.application.routes.draw do
       # Stores
       resources :stores, only: [ :index, :show ]
       resources :menu_items, only: [ :show ]
+
+      # Admin utilities
+      get 'admin/fix-data', to: 'admin#fix_data'
     end
   end
 end
