@@ -4,12 +4,7 @@ module Api
       skip_before_action :authenticate_user!, only: [:index, :show]
 
       def index
-        stores = Store.all.map do |store|
-          store_json = store.as_json
-          # Add branch_code field, defaulting to 'KKT' if not present
-          store_json['branch_code'] = store.respond_to?(:branch_code) ? (store.branch_code || 'KKT') : 'KKT'
-          store_json
-        end
+        stores = Store.all
         render json: stores
       end
 
