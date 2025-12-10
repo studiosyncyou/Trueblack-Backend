@@ -43,7 +43,8 @@ module Api
             @order.update!(total_amount: @order.calculate_total)
           end
         end
-
+        puts ENV['RISTA_API_KEY']
+         Rails.logger.info "Order creation failed: #{ENV['RISTA_API_KEY']}"
         # 3. Proxy to Rista API (outside transaction)
         proxy_to_rista(@order)
 
