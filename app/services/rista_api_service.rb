@@ -1,16 +1,19 @@
 require 'httparty'
 require 'openssl'
 require 'securerandom'
+require 'jwt'
+require 'base64'
 
 class RistaApiService
   include HTTParty
 
-  base_uri ENV.fetch('RISTA_API_BASE_URL', 'https://api.rista.store/api/v1')
+  base_uri ENV.fetch('RISTA_API_BASE_URL', 'https://api.ristaapps.com/v1')
 
   def initialize
     @api_key = ENV['RISTA_API_KEY']
     @secret = ENV['RISTA_SECRET']
     @timeout = 15
+    @use_jwt = ENV.fetch('RISTA_USE_JWT', 'true') == 'true' # Default to JWT auth
 
     validate_config!
   end
@@ -70,6 +73,39 @@ class RistaApiService
   end
 
   def generate_headers(include_jti = false)
+    if @use_jwt
+      generate_jwt_headers(include_jti)
+    else
+      generate_hmac_headers(include_jti)
+    end
+  end
+
+  # JWT Authentication (used by old app)
+  def generate_jwt_headers(include_jti = false)
+    now = Time.now.to_i
+
+    # JWT Payload
+    payload = {
+      iss: @api_key,
+      iat: now
+    }
+
+    # Add jti for POST/PUT/DELETE requests
+    payload[:jti] = generate_jti if include_jti
+
+    # Generate JWT token
+    token = JWT.encode(payload, @secret, 'HS256')
+
+    {
+      'Content-Type' => 'application/json',
+      'Accept' => 'application/json',
+      'x-api-key' => @api_key,
+      'x-api-token' => token
+    }
+  end
+
+  # HMAC Authentication (alternative method)
+  def generate_hmac_headers(include_jti = false)
     timestamp = Time.now.to_i.to_s
     jti = include_jti ? SecureRandom.uuid : nil
 
@@ -87,6 +123,10 @@ class RistaApiService
     headers['x-jti'] = jti if include_jti
 
     headers
+  end
+
+  def generate_jti
+    "#{Time.now.to_i}-#{SecureRandom.hex(8)}"
   end
 
   def handle_response(response, path)
