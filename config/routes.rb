@@ -40,6 +40,7 @@ Rails.application.routes.draw do
 
       # Admin utilities
       get 'admin/fix-data', to: 'admin#fix_data'
+      get 'admin/debug-env', to: 'admin#debug_env'
       get 'admin/test-rista', to: 'admin#test_rista'
     end
   end

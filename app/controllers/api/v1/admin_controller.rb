@@ -42,6 +42,18 @@ module Api
         end
       end
 
+      # GET /api/v1/admin/debug-env
+      def debug_env
+        render json: {
+          rista_api_key_set: ENV['RISTA_API_KEY'].present?,
+          rista_secret_set: ENV['RISTA_SECRET'].present?,
+          rista_base_url_set: ENV['RISTA_API_BASE_URL'].present?,
+          rista_default_branch: ENV['RISTA_DEFAULT_BRANCH'],
+          rails_env: Rails.env,
+          all_rista_vars: ENV.select { |k, _| k.start_with?('RISTA') }.keys
+        }
+      end
+
       # GET /api/v1/admin/test-rista
       def test_rista
         begin
