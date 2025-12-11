@@ -54,5 +54,18 @@ module Types
     def order(id:)
       Order.includes(:order_items).find_by(id: id)
     end
+
+    field :debug_env, GraphQL::Types::JSON, null: false,
+      description: "Debug environment variables"
+    def debug_env
+      {
+        rista_api_key_set: ENV['RISTA_API_KEY'].present?,
+        rista_secret_set: ENV['RISTA_SECRET'].present?,
+        rista_base_url_set: ENV['RISTA_API_BASE_URL'].present?,
+        rista_default_branch: ENV['RISTA_DEFAULT_BRANCH'],
+        rails_env: Rails.env.to_s,
+        all_rista_vars: ENV.select { |k, _| k.start_with?('RISTA') }.keys
+      }
+    end
   end
 end
