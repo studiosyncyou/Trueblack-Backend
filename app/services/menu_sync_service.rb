@@ -221,8 +221,14 @@ class MenuSyncService
       s.longitude = 78.486671
     end
 
-    # Find or create category
-    Category.find_or_create_by!(name: category_name, store: store)
+    # Find category by name only (don't create duplicates across stores)
+    category = Category.find_by(name: category_name)
+
+    unless category
+      category = Category.create!(name: category_name, store: store)
+    end
+
+    category
   end
 
   def find_or_create_rista_category
@@ -237,6 +243,24 @@ class MenuSyncService
       Rails.logger.info "[MenuSync] Cleaning up old 'Rista Items' category (#{old_category.menu_items.count} items)"
       MenuItem.where(category: old_category).destroy_all
       Rails.logger.info "[MenuSync] Cleanup completed"
+    end
+
+    # Clean up duplicate categories (keep only first of each name)
+    Category.select('name, MIN(id) as min_id').group('name').having('COUNT(*) > 1').each do |result|
+      category_name = result.name
+      keep_id = result.min_id
+
+      duplicates = Category.where(name: category_name).where.not(id: keep_id)
+      if duplicates.any?
+        Rails.logger.info "[MenuSync] Cleaning up #{duplicates.count} duplicate '#{category_name}' categories"
+
+        # Reassign items to the category we're keeping
+        keeper = Category.find(keep_id)
+        duplicates.each do |dup|
+          MenuItem.where(category: dup).update_all(category_id: keeper.id)
+          dup.destroy
+        end
+      end
     end
   end
 end
