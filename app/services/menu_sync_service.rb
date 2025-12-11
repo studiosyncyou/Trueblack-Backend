@@ -73,12 +73,14 @@ class MenuSyncService
   def sync_menu_items(rista_items)
     items_synced = 0
 
-    # Find or create "Rista" category
-    rista_category = find_or_create_rista_category
+    # Fetch full catalog with categories for mapping
+    catalog = @rista_api.fetch_catalog(@branch_code)
+    category_map = build_category_map(catalog['categories'] || [])
 
     ActiveRecord::Base.transaction do
       rista_items.each do |item|
-        sync_menu_item(item, rista_category)
+        app_category = map_item_to_app_category(item, category_map)
+        sync_menu_item(item, app_category)
         items_synced += 1
       end
     end
@@ -118,15 +120,110 @@ class MenuSyncService
     menu_item
   end
 
-  def find_or_create_rista_category
-    # Find or create a store for Rista items
-    store = Store.find_or_create_by!(name: 'Rista Menu') do |s|
-      s.address = 'Synced from Rista POS'
-      s.latitude = 0
-      s.longitude = 0
+  # Build a map of Rista category/subcategory IDs to names
+  def build_category_map(rista_categories)
+    map = {}
+
+    rista_categories.each do |category|
+      cat_id = category['id'] || category['categoryId']
+      cat_name = category['name'] || category['categoryName']
+
+      map[cat_id] = {
+        name: cat_name,
+        subcategories: {}
+      }
+
+      # Map subcategories
+      if category['subCategories']
+        category['subCategories'].each do |sub|
+          sub_id = sub['id'] || sub['subCategoryId']
+          sub_name = sub['name'] || sub['subCategoryName']
+          map[cat_id][:subcategories][sub_id] = sub_name
+        end
+      end
+    end
+
+    map
+  end
+
+  # Map Rista item to app category based on Rista category/subcategory
+  def map_item_to_app_category(item, category_map)
+    rista_cat_id = item['categoryId']
+    rista_subcat_id = item['subCategoryId']
+
+    rista_category_info = category_map[rista_cat_id]
+    return find_or_create_app_category('Other') unless rista_category_info
+
+    rista_cat_name = rista_category_info[:name]
+    rista_subcat_name = rista_category_info[:subcategories][rista_subcat_id]
+
+    # Determine app category name based on mapping
+    app_category_name = determine_app_category(rista_cat_name, rista_subcat_name, item['name'])
+
+    find_or_create_app_category(app_category_name)
+  end
+
+  # Map Rista categories to app categories
+  def determine_app_category(rista_category, rista_subcategory, item_name)
+    # Normalize category names for matching
+    cat = rista_category&.downcase&.strip || ''
+    subcat = rista_subcategory&.downcase&.strip || ''
+
+    # Espresso Based mapping
+    if cat.include?('espresso')
+      return 'ESPRESSO ICED' if subcat.include?('iced')
+      return 'ESPRESSO HOT' if subcat.include?('hot')
+      return 'ESPRESSO HOT' # default for espresso
+    end
+
+    # Cold Brew
+    return 'COLD BREW' if cat.include?('cold brew')
+
+    # Cremes
+    return 'CREMES' if cat.include?('creme')
+
+    # Non Coffee / Tea
+    if cat.include?('non coffee') || cat.include?('matcha') || cat.include?('tea')
+      return 'MATCHA' if subcat.include?('matcha')
+      return 'NON COFFEE/TEA'
+    end
+
+    # Food categories
+    if cat.include?('food')
+      return 'FRENCH TOAST' if subcat.include?('french toast')
+      return 'BREAKFAST/TOAST' if subcat.include?('sourdough') || subcat.include?('toast')
+      return 'SMOOTHIE BOWLS' if subcat.include?('smoothie')
+      return 'BURGERS' if subcat.include?('burger')
+      return 'SANDWICHES' if subcat.include?('sandwich')
+      return 'BAGELS' if subcat.include?('bagel')
+      return 'MAINS' if subcat.include?('mains') || subcat.include?('shareable')
+      return 'SIDES' if subcat.include?('salad') || subcat.include?('sides')
+    end
+
+    # Desserts
+    return 'DESSERTS' if cat.include?('dessert')
+
+    # Marketplace
+    return 'MARKETPLACE' if cat.include?('market') || cat.include?('merchandise')
+
+    # Default to Other for unmapped categories
+    'Other'
+  end
+
+  def find_or_create_app_category(category_name)
+    # Find or create default store
+    store = Store.find_or_create_by!(name: 'TRUE BLACK Coffee') do |s|
+      s.address = 'Multiple Locations'
+      s.latitude = 17.385044
+      s.longitude = 78.486671
     end
 
     # Find or create category
-    Category.find_or_create_by!(name: 'Rista Items', store: store)
+    Category.find_or_create_by!(name: category_name, store: store)
+  end
+
+  def find_or_create_rista_category
+    # Deprecated: Use find_or_create_app_category instead
+    find_or_create_app_category('Other')
   end
 end
