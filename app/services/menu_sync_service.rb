@@ -73,12 +73,15 @@ class MenuSyncService
   def sync_menu_items(rista_items)
     items_synced = 0
 
+    # Clear old categories and duplicates BEFORE syncing
+    cleanup_old_rista_category
+
+    # Initialize category cache
+    @category_cache = {}
+
     # Fetch full catalog with categories for mapping
     catalog = @rista_api.fetch_catalog(@branch_code)
     category_map = build_category_map(catalog['categories'] || [])
-
-    # Clear old "Rista Items" category if it exists (one-time cleanup)
-    cleanup_old_rista_category
 
     ActiveRecord::Base.transaction do
       rista_items.each do |item|
@@ -214,6 +217,9 @@ class MenuSyncService
   end
 
   def find_or_create_app_category(category_name)
+    # Return cached category if already found/created
+    return @category_cache[category_name] if @category_cache&.key?(category_name)
+
     # Find or create default store
     store = Store.find_or_create_by!(name: 'TRUE BLACK Coffee') do |s|
       s.address = 'Multiple Locations'
@@ -227,6 +233,10 @@ class MenuSyncService
     unless category
       category = Category.create!(name: category_name, store: store)
     end
+
+    # Cache the category
+    @category_cache ||= {}
+    @category_cache[category_name] = category
 
     category
   end
