@@ -1,7 +1,7 @@
 module Api
   module V1
     class MenuController < ApplicationController
-      skip_before_action :authenticate_user!, only: [:index, :sync, :sync_status]
+      skip_before_action :authenticate_user!, only: [:index, :sync, :sync_status, :cleanup_duplicates]
 
       # GET /api/v1/menu?store_id=1
       # Returns cached menu from database (synced from Rista)
@@ -76,6 +76,25 @@ module Api
             needs_sync: true
           }
         end
+      end
+
+      # POST /api/v1/menu/cleanup_duplicates
+      # Remove duplicate menu items (keep only Rista-synced items)
+      def cleanup_duplicates
+        total_items = MenuItem.count
+        items_without_rista_code = MenuItem.where(rista_code: nil).count
+
+        Rails.logger.info "[Menu] Cleanup: #{items_without_rista_code} items without rista_code will be deleted"
+
+        deleted_count = MenuItem.where(rista_code: nil).delete_all
+        remaining_items = MenuItem.count
+
+        render json: {
+          message: 'Duplicate cleanup completed',
+          deleted_count: deleted_count,
+          total_before: total_items,
+          remaining: remaining_items
+        }, status: :ok
       end
 
       private

@@ -30,6 +30,7 @@ Rails.application.routes.draw do
       get 'menu', to: 'menu#index'
       post 'menu/sync', to: 'menu#sync'
       get 'menu/sync_status', to: 'menu#sync_status'
+      post 'menu/cleanup_duplicates', to: 'menu#cleanup_duplicates'
 
       # Orders (user history + create, proxied to Rista)
       resources :orders, only: [:index, :show, :create]
