@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_12_09_123155) do
+ActiveRecord::Schema[8.0].define(version: 2025_12_11_102751) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -143,6 +143,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_12_09_123155) do
     t.string "space_name"
     t.string "area"
     t.string "hours"
+    t.string "branch_code"
+    t.index ["branch_code"], name: "index_stores_on_branch_code"
   end
 
   create_table "users", force: :cascade do |t|
