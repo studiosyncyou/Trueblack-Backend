@@ -77,6 +77,9 @@ class MenuSyncService
     catalog = @rista_api.fetch_catalog(@branch_code)
     category_map = build_category_map(catalog['categories'] || [])
 
+    # Clear old "Rista Items" category if it exists (one-time cleanup)
+    cleanup_old_rista_category
+
     ActiveRecord::Base.transaction do
       rista_items.each do |item|
         app_category = map_item_to_app_category(item, category_map)
@@ -225,5 +228,15 @@ class MenuSyncService
   def find_or_create_rista_category
     # Deprecated: Use find_or_create_app_category instead
     find_or_create_app_category('Other')
+  end
+
+  def cleanup_old_rista_category
+    # One-time cleanup: Delete all items from old "Rista Items" category
+    old_category = Category.find_by(name: 'Rista Items')
+    if old_category
+      Rails.logger.info "[MenuSync] Cleaning up old 'Rista Items' category (#{old_category.menu_items.count} items)"
+      MenuItem.where(category: old_category).destroy_all
+      Rails.logger.info "[MenuSync] Cleanup completed"
+    end
   end
 end
