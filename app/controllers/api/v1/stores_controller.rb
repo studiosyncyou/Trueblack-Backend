@@ -5,7 +5,7 @@ module Api
 
       def index
         stores = Store.all
-        render json: stores
+        render json: stores, only: [:id, :name, :address, :phone, :latitude, :longitude, :branch_code, :created_at, :updated_at]
       end
 
       def show
