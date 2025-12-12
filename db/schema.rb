@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_12_12_114318) do
+ActiveRecord::Schema[8.0].define(version: 2025_12_12_122322) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -58,6 +58,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_12_12_114318) do
     t.boolean "is_default"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "rista_item_id"
     t.index ["option_set_id"], name: "index_customization_options_on_option_set_id"
   end
 
@@ -108,6 +109,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_12_12_114318) do
     t.string "rista_option_set_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "display_name"
+    t.integer "min_selections"
+    t.integer "max_selections"
   end
 
   create_table "order_items", force: :cascade do |t|

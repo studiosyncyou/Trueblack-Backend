@@ -32,7 +32,15 @@ class MenuSyncService
         raise "Invalid catalog response from Rista"
       end
 
+      # Sync option sets first (customizations)
+      option_sets_synced = sync_option_sets(catalog['optionSets'] || [])
+      Rails.logger.info "[MenuSync] Synced #{option_sets_synced} option sets"
+
+      # Sync menu items
       items_synced = sync_menu_items(catalog['items'])
+
+      # Link menu items to their option sets
+      link_option_sets_to_items(catalog['items'])
 
       # Mark sync as successful
       log.update!(
@@ -373,5 +381,92 @@ class MenuSyncService
 
     # Return comma-separated string or nil if no allergens
     allergens.any? ? allergens.join(',') : nil
+  end
+
+  # Sync option sets from Rista catalog
+  def sync_option_sets(rista_option_sets)
+    synced_count = 0
+
+    ActiveRecord::Base.transaction do
+      rista_option_sets.each do |option_set_data|
+        option_set_id = option_set_data['optionSetId']
+        next unless option_set_id.present?
+
+        # Find or create option set
+        option_set = OptionSet.find_or_initialize_by(rista_option_set_id: option_set_id)
+        option_set.assign_attributes(
+          name: option_set_data['name'],
+          display_name: option_set_data['displayName'],
+          min_selections: option_set_data['min'] || 0,
+          max_selections: option_set_data['max'] || 1
+        )
+        option_set.save!
+
+        # Sync options within this set
+        sync_customization_options(option_set, option_set_data['options'] || [])
+
+        synced_count += 1
+        Rails.logger.debug "[MenuSync] Synced option set: #{option_set.name} (#{option_set_id})"
+      end
+    end
+
+    synced_count
+  end
+
+  # Sync individual customization options for an option set
+  def sync_customization_options(option_set, rista_options)
+    rista_options.each do |option_data|
+      option_id = option_data['optionId']
+      next unless option_id.present?
+
+      # Find or create customization option
+      custom_option = CustomizationOption.find_or_initialize_by(
+        option_set: option_set,
+        rista_option_id: option_id
+      )
+      custom_option.assign_attributes(
+        name: option_data['optionName'],
+        price: option_data['price']&.to_f || 0.0,
+        is_default: option_data['isDefault'] || false,
+        rista_item_id: option_data['itemId']
+      )
+      custom_option.save!
+    end
+  end
+
+  # Link menu items to their option sets
+  def link_option_sets_to_items(rista_items)
+    linked_count = 0
+
+    ActiveRecord::Base.transaction do
+      rista_items.each do |item|
+        rista_code = item['code'] || item['skuCode'] || item['itemCode']
+        option_set_ids = item['optionSetIds'] || []
+
+        next unless rista_code.present? && option_set_ids.any?
+
+        # Find menu item by rista_code
+        menu_item = MenuItem.find_by(rista_code: rista_code)
+        next unless menu_item
+
+        # Clear existing associations
+        menu_item.menu_item_option_sets.delete_all
+
+        # Link to option sets
+        option_set_ids.each do |option_set_id|
+          option_set = OptionSet.find_by(rista_option_set_id: option_set_id)
+          next unless option_set
+
+          MenuItemOptionSet.create!(
+            menu_item: menu_item,
+            option_set: option_set
+          )
+          linked_count += 1
+        end
+      end
+    end
+
+    Rails.logger.info "[MenuSync] Linked #{linked_count} option sets to menu items"
+    linked_count
   end
 end
