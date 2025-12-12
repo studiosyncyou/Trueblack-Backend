@@ -282,6 +282,23 @@ class MenuSyncService
       Rails.logger.info "[MenuSync] Marked #{items_without_code} items as unavailable"
     end
 
+    # Mark addon items from previous syncs as unavailable (they should not appear in menu)
+    # Get addon category IDs from Rista
+    addon_rista_category_ids = []
+    catalog = @rista_api.fetch_catalog(@branch_code)
+    if catalog && catalog['categories']
+      addon_categories = catalog['categories'].select { |c| (c['name'] || '').downcase.include?('addon') }
+      addon_rista_category_ids = addon_categories.map { |c| c['categoryId'] || c['id'] }.compact
+    end
+
+    if addon_rista_category_ids.any?
+      addon_items = MenuItem.where(rista_category_id: addon_rista_category_ids.map(&:to_s), is_available: true).count
+      if addon_items > 0
+        Rails.logger.info "[MenuSync] Marking #{addon_items} addon items as unavailable"
+        MenuItem.where(rista_category_id: addon_rista_category_ids.map(&:to_s)).update_all(is_available: false)
+      end
+    end
+
     # Clean up duplicate categories (keep only first of each name)
     Category.select('name, MIN(id) as min_id').group('name').having('COUNT(*) > 1').each do |result|
       category_name = result.name
