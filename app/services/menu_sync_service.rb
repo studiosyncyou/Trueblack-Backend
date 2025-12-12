@@ -255,6 +255,14 @@ class MenuSyncService
       Rails.logger.info "[MenuSync] Cleanup completed"
     end
 
+    # Delete all items without rista_code (old local seed data causing duplicates)
+    items_without_code = MenuItem.where(rista_code: nil).count
+    if items_without_code > 0
+      Rails.logger.info "[MenuSync] Cleaning up #{items_without_code} items without rista_code (old local data)"
+      MenuItem.where(rista_code: nil).delete_all
+      Rails.logger.info "[MenuSync] Deleted #{items_without_code} items"
+    end
+
     # Clean up duplicate categories (keep only first of each name)
     Category.select('name, MIN(id) as min_id').group('name').having('COUNT(*) > 1').each do |result|
       category_name = result.name
