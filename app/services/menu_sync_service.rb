@@ -331,7 +331,7 @@ class MenuSyncService
   # Determine dietary type from Rista itemTagIds
   def determine_dietary_type(tag_ids)
     # Rista dietary tag IDs (from catalog analysis)
-    DIETARY_TAGS = {
+    dietary_tags = {
       'vegan' => ['687f3350dbd358736dc6e259'],
       'egg' => ['687f3350dbd358736dc6e256'],
       'non_veg' => ['687f3350dbd358736dc6e253'],
@@ -340,10 +340,10 @@ class MenuSyncService
 
     # Priority order: vegan > egg > non_veg > veg
     # This ensures proper classification (e.g., egg items aren't classified as veg)
-    return 'vegan' if (tag_ids & DIETARY_TAGS['vegan']).any?
-    return 'egg' if (tag_ids & DIETARY_TAGS['egg']).any?
-    return 'non_veg' if (tag_ids & DIETARY_TAGS['non_veg']).any?
-    return 'veg' if (tag_ids & DIETARY_TAGS['veg']).any?
+    return 'vegan' if (tag_ids & dietary_tags['vegan']).any?
+    return 'egg' if (tag_ids & dietary_tags['egg']).any?
+    return 'non_veg' if (tag_ids & dietary_tags['non_veg']).any?
+    return 'veg' if (tag_ids & dietary_tags['veg']).any?
 
     # Default to veg if no dietary tags found (most items in coffee shop are veg)
     'veg'
