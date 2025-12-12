@@ -1,5 +1,7 @@
 class MenuItem < ApplicationRecord
   belongs_to :category
+  has_many :menu_item_option_sets, dependent: :destroy
+  has_many :option_sets, through: :menu_item_option_sets
 
   validates :name, presence: true
   validates :price, presence: true, numericality: { greater_than_or_equal_to: 0 }

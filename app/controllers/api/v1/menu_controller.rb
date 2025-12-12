@@ -152,6 +152,20 @@ module Api
           allergenInfo: item.allergen_info&.split(',') || [],
           isAvailable: item.is_available,
           categoryId: item.category_id,
+          customizations: item.option_sets.includes(:customization_options).map do |option_set|
+            {
+              id: option_set.id,
+              name: option_set.name,
+              options: option_set.customization_options.map do |opt|
+                {
+                  id: opt.id,
+                  name: opt.name,
+                  price: opt.price.to_f,
+                  isDefault: opt.is_default || false
+                }
+              end
+            }
+          end,
           ristaData: {
             code: item.rista_code,
             categoryId: item.rista_category_id,

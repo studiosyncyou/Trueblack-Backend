@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_12_12_113749) do
+ActiveRecord::Schema[8.0].define(version: 2025_12_12_114318) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -50,6 +50,26 @@ ActiveRecord::Schema[8.0].define(version: 2025_12_12_113749) do
     t.index ["store_id"], name: "index_categories_on_store_id"
   end
 
+  create_table "customization_options", force: :cascade do |t|
+    t.bigint "option_set_id", null: false
+    t.string "name"
+    t.decimal "price"
+    t.string "rista_option_id"
+    t.boolean "is_default"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["option_set_id"], name: "index_customization_options_on_option_set_id"
+  end
+
+  create_table "menu_item_option_sets", force: :cascade do |t|
+    t.bigint "menu_item_id", null: false
+    t.bigint "option_set_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["menu_item_id"], name: "index_menu_item_option_sets_on_menu_item_id"
+    t.index ["option_set_id"], name: "index_menu_item_option_sets_on_option_set_id"
+  end
+
   create_table "menu_items", force: :cascade do |t|
     t.string "name"
     t.text "description"
@@ -81,6 +101,13 @@ ActiveRecord::Schema[8.0].define(version: 2025_12_12_113749) do
     t.datetime "updated_at", null: false
     t.index ["completed_at"], name: "index_menu_sync_logs_on_completed_at"
     t.index ["status"], name: "index_menu_sync_logs_on_status"
+  end
+
+  create_table "option_sets", force: :cascade do |t|
+    t.string "name"
+    t.string "rista_option_set_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "order_items", force: :cascade do |t|
@@ -162,6 +189,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_12_12_113749) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "categories", "stores"
+  add_foreign_key "customization_options", "option_sets"
+  add_foreign_key "menu_item_option_sets", "menu_items"
+  add_foreign_key "menu_item_option_sets", "option_sets"
   add_foreign_key "menu_items", "categories"
   add_foreign_key "order_items", "menu_items"
   add_foreign_key "order_items", "orders"
