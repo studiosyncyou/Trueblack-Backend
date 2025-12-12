@@ -86,6 +86,9 @@ class MenuSyncService
     ActiveRecord::Base.transaction do
       rista_items.each do |item|
         app_category = map_item_to_app_category(item, category_map)
+        # Skip items that are mapped to nil (addons, staff items, wastage, etc.)
+        next if app_category.nil?
+
         sync_menu_item(item, app_category)
         items_synced += 1
       end
@@ -175,6 +178,12 @@ class MenuSyncService
     cat = rista_category&.downcase&.strip || ''
     subcat = rista_subcategory&.downcase&.strip || ''
 
+    # Skip addons, staff items, wastage, and others - these should not appear in menu
+    return nil if cat.include?('addon')
+    return nil if cat.include?('staff')
+    return nil if cat.include?('wastage')
+    return nil if cat == 'others' # Generic "Others" category should be hidden
+
     # Espresso Based mapping
     if cat.include?('espresso')
       return 'ESPRESSO ICED' if subcat.include?('iced')
@@ -184,6 +193,12 @@ class MenuSyncService
 
     # Cold Brew
     return 'COLD BREW' if cat.include?('cold brew')
+
+    # Drip Coffee
+    return 'DRIP COFFEE' if cat.include?('drip coffee')
+
+    # Pour Over
+    return 'POUR OVER' if cat.include?('pour over')
 
     # Cremes
     return 'CREMES' if cat.include?('creme')
@@ -209,8 +224,8 @@ class MenuSyncService
     # Desserts
     return 'DESSERTS' if cat.include?('dessert')
 
-    # Marketplace
-    return 'MARKETPLACE' if cat.include?('market') || cat.include?('merchandise')
+    # Marketplace / Merchandise / Roasted Coffee
+    return 'MARKETPLACE' if cat.include?('market') || cat.include?('merchandise') || cat.include?('roasted coffee')
 
     # Default to Other for unmapped categories
     'Other'
