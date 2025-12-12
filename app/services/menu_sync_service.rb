@@ -247,12 +247,15 @@ class MenuSyncService
   end
 
   def cleanup_old_rista_category
-    # One-time cleanup: Delete all items from old "Rista Items" category
+    # One-time cleanup: Mark items from old "Rista Items" category as unavailable (can't delete due to FK)
     old_category = Category.find_by(name: 'Rista Items')
     if old_category
-      Rails.logger.info "[MenuSync] Cleaning up old 'Rista Items' category (#{old_category.menu_items.count} items)"
-      MenuItem.where(category: old_category).destroy_all
-      Rails.logger.info "[MenuSync] Cleanup completed"
+      old_items_count = old_category.menu_items.where(is_available: true).count
+      if old_items_count > 0
+        Rails.logger.info "[MenuSync] Marking #{old_items_count} items from old 'Rista Items' category as unavailable"
+        MenuItem.where(category: old_category).update_all(is_available: false)
+        Rails.logger.info "[MenuSync] Cleanup completed"
+      end
     end
 
     # Mark old items without rista_code as unavailable (can't delete due to FK constraints with orders)
