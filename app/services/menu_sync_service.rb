@@ -256,10 +256,11 @@ class MenuSyncService
     end
 
     # Delete all items without rista_code (old local seed data causing duplicates)
-    items_without_code = MenuItem.where(rista_code: nil).count
+    # Check for both nil and empty string
+    items_without_code = MenuItem.where("rista_code IS NULL OR rista_code = ''").count
     if items_without_code > 0
       Rails.logger.info "[MenuSync] Cleaning up #{items_without_code} items without rista_code (old local data)"
-      MenuItem.where(rista_code: nil).delete_all
+      MenuItem.where("rista_code IS NULL OR rista_code = ''").delete_all
       Rails.logger.info "[MenuSync] Deleted #{items_without_code} items"
     end
 
