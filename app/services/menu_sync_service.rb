@@ -255,13 +255,13 @@ class MenuSyncService
       Rails.logger.info "[MenuSync] Cleanup completed"
     end
 
-    # Delete all items without rista_code (old local seed data causing duplicates)
+    # Mark old items without rista_code as unavailable (can't delete due to FK constraints with orders)
     # Check for both nil and empty string
-    items_without_code = MenuItem.where("rista_code IS NULL OR rista_code = ''").count
+    items_without_code = MenuItem.where("rista_code IS NULL OR rista_code = ''").where(is_available: true).count
     if items_without_code > 0
-      Rails.logger.info "[MenuSync] Cleaning up #{items_without_code} items without rista_code (old local data)"
-      MenuItem.where("rista_code IS NULL OR rista_code = ''").delete_all
-      Rails.logger.info "[MenuSync] Deleted #{items_without_code} items"
+      Rails.logger.info "[MenuSync] Marking #{items_without_code} items without rista_code as unavailable (old local data)"
+      MenuItem.where("rista_code IS NULL OR rista_code = ''").update_all(is_available: false)
+      Rails.logger.info "[MenuSync] Marked #{items_without_code} items as unavailable"
     end
 
     # Clean up duplicate categories (keep only first of each name)
