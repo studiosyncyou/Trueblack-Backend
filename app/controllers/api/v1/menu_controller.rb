@@ -156,6 +156,9 @@ module Api
             {
               id: option_set.id,
               name: option_set.name,
+              displayName: option_set.display_name,
+              minSelections: option_set.min_selections,
+              maxSelections: option_set.max_selections,
               options: option_set.customization_options.map do |opt|
                 {
                   id: opt.id,
