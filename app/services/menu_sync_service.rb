@@ -235,6 +235,9 @@ class MenuSyncService
   end
 
   def find_or_create_app_category(category_name)
+    # Return nil if category name is blank (should never happen but extra safety)
+    return nil if category_name.blank?
+
     # Return cached category if already found/created
     return @category_cache[category_name] if @category_cache&.key?(category_name)
 
