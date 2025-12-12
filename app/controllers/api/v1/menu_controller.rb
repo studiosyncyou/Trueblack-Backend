@@ -148,6 +148,7 @@ module Api
           price: item.price.to_f,
           image: item.image_url,
           isVeg: item.is_veg,
+          dietaryType: item.dietary_type,
           isAvailable: item.is_available,
           categoryId: item.category_id,
           ristaData: {

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_12_11_102751) do
+ActiveRecord::Schema[8.0].define(version: 2025_12_12_111751) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -65,6 +65,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_12_11_102751) do
     t.string "rista_subcategory_id"
     t.string "short_name"
     t.datetime "last_synced_at"
+    t.string "dietary_type"
     t.index ["category_id"], name: "index_menu_items_on_category_id"
     t.index ["rista_code"], name: "index_menu_items_on_rista_code", unique: true
   end

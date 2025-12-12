@@ -108,6 +108,9 @@ class MenuSyncService
     # Find or initialize menu item by rista_code
     menu_item = MenuItem.find_or_initialize_by(rista_code: rista_code)
 
+    # Determine dietary type from itemTagIds
+    dietary_type = determine_dietary_type(rista_item['itemTagIds'] || [])
+
     # Update attributes
     menu_item.assign_attributes(
       name: name,
@@ -117,6 +120,7 @@ class MenuSyncService
       category: category,
       is_available: rista_item['status'] == 'Active' || rista_item['available'] != false,
       is_veg: rista_item['isVeg'].nil? ? true : rista_item['isVeg'],
+      dietary_type: dietary_type,
       rista_category_id: rista_item['categoryId']&.to_s,
       rista_subcategory_id: rista_item['subCategoryId']&.to_s,
       image_url: rista_item['image'] || rista_item['imageUrl'],
@@ -125,7 +129,7 @@ class MenuSyncService
 
     menu_item.save!
 
-    Rails.logger.debug "[MenuSync] Synced: #{name} (#{rista_code})"
+    Rails.logger.debug "[MenuSync] Synced: #{name} (#{rista_code}) - #{dietary_type}"
     menu_item
   end
 
@@ -322,5 +326,26 @@ class MenuSyncService
         end
       end
     end
+  end
+
+  # Determine dietary type from Rista itemTagIds
+  def determine_dietary_type(tag_ids)
+    # Rista dietary tag IDs (from catalog analysis)
+    DIETARY_TAGS = {
+      'vegan' => ['687f3350dbd358736dc6e259'],
+      'egg' => ['687f3350dbd358736dc6e256'],
+      'non_veg' => ['687f3350dbd358736dc6e253'],
+      'veg' => ['687f3350dbd358736dc6e252', '69101374bedff124ac09b15c', '69101394c9682e7770ec12e5']
+    }
+
+    # Priority order: vegan > egg > non_veg > veg
+    # This ensures proper classification (e.g., egg items aren't classified as veg)
+    return 'vegan' if (tag_ids & DIETARY_TAGS['vegan']).any?
+    return 'egg' if (tag_ids & DIETARY_TAGS['egg']).any?
+    return 'non_veg' if (tag_ids & DIETARY_TAGS['non_veg']).any?
+    return 'veg' if (tag_ids & DIETARY_TAGS['veg']).any?
+
+    # Default to veg if no dietary tags found (most items in coffee shop are veg)
+    'veg'
   end
 end
