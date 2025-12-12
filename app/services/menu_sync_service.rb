@@ -169,6 +169,9 @@ class MenuSyncService
     # Determine app category name based on mapping
     app_category_name = determine_app_category(rista_cat_name, rista_subcat_name, item['name'])
 
+    # Return nil if category should be skipped (addons, staff, etc.)
+    return nil if app_category_name.nil?
+
     find_or_create_app_category(app_category_name)
   end
 
