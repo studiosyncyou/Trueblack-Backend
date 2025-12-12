@@ -109,7 +109,9 @@ class MenuSyncService
     menu_item = MenuItem.find_or_initialize_by(rista_code: rista_code)
 
     # Determine dietary type from itemTagIds
-    dietary_type = determine_dietary_type(rista_item['itemTagIds'] || [])
+    item_tag_ids = rista_item['itemTagIds'] || []
+    dietary_type = determine_dietary_type(item_tag_ids)
+    allergen_info = extract_allergen_info(item_tag_ids)
 
     # Update attributes
     menu_item.assign_attributes(
@@ -121,6 +123,7 @@ class MenuSyncService
       is_available: rista_item['status'] == 'Active' || rista_item['available'] != false,
       is_veg: rista_item['isVeg'].nil? ? true : rista_item['isVeg'],
       dietary_type: dietary_type,
+      allergen_info: allergen_info,
       rista_category_id: rista_item['categoryId']&.to_s,
       rista_subcategory_id: rista_item['subCategoryId']&.to_s,
       image_url: rista_item['image'] || rista_item['imageUrl'],
@@ -347,5 +350,28 @@ class MenuSyncService
 
     # Default to veg if no dietary tags found (most items in coffee shop are veg)
     'veg'
+  end
+
+  # Extract allergen and dietary warnings from itemTagIds
+  def extract_allergen_info(tag_ids)
+    return nil if tag_ids.blank?
+
+    # Allergen tag IDs from Rista catalog
+    allergen_tags = {
+      'spicy' => '687f3350dbd358736dc6e255',
+      'wheat_free' => '687f3350dbd358736dc6e257',
+      'gluten_free' => '687f3350dbd358736dc6e258',
+      'vegan' => '687f3350dbd358736dc6e259'
+    }
+
+    # Find matching allergen tags
+    allergens = []
+    allergens << 'spicy' if tag_ids.include?(allergen_tags['spicy'])
+    allergens << 'wheat_free' if tag_ids.include?(allergen_tags['wheat_free'])
+    allergens << 'gluten_free' if tag_ids.include?(allergen_tags['gluten_free'])
+    allergens << 'vegan' if tag_ids.include?(allergen_tags['vegan'])
+
+    # Return comma-separated string or nil if no allergens
+    allergens.any? ? allergens.join(',') : nil
   end
 end

@@ -149,6 +149,7 @@ module Api
           image: item.image_url,
           isVeg: item.is_veg,
           dietaryType: item.dietary_type,
+          allergenInfo: item.allergen_info&.split(',') || [],
           isAvailable: item.is_available,
           categoryId: item.category_id,
           ristaData: {
