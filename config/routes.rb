@@ -33,7 +33,11 @@ Rails.application.routes.draw do
       post 'menu/cleanup_duplicates', to: 'menu#cleanup_duplicates'
 
       # Orders (user history + create, proxied to Rista)
-      resources :orders, only: [:index, :show, :create]
+      resources :orders, only: [:index, :show, :create] do
+        collection do
+          get 'test_rista'
+        end
+      end
 
       # Stores
       resources :stores, only: [ :index, :show ]

@@ -1,7 +1,45 @@
 module Api
   module V1
     class OrdersController < ApplicationController
-      before_action :authenticate_user!
+      before_action :authenticate_user!, except: [:test_rista]
+
+      # GET /api/v1/orders/test_rista
+      # Test Rista connection (no auth required for debugging)
+      def test_rista
+        begin
+          rista_api = RistaApiService.new
+
+          # Test by fetching branches (simple GET request)
+          branches = rista_api.fetch_branches
+
+          # Also test catalog fetch
+          catalog = rista_api.fetch_catalog('KKT')
+
+          render json: {
+            status: 'connected',
+            message: 'Rista API connection successful',
+            branches_count: branches&.length || 0,
+            catalog_items: catalog['items']&.length || 0,
+            timestamp: Time.current.iso8601
+          }
+        rescue RistaApiService::RistaApiError => e
+          render json: {
+            status: 'error',
+            message: "Rista API error: #{e.message}",
+            status_code: e.status_code
+          }, status: :bad_gateway
+        rescue RistaApiService::ConfigurationError => e
+          render json: {
+            status: 'config_error',
+            message: "Configuration error: #{e.message}"
+          }, status: :internal_server_error
+        rescue => e
+          render json: {
+            status: 'error',
+            message: "Unexpected error: #{e.message}"
+          }, status: :internal_server_error
+        end
+      end
 
       # POST /api/v1/orders
       # Creates order in our DB and proxies to Rista
