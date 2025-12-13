@@ -12,6 +12,28 @@ module Api
         /^Packaging$/i,                         # Packaging
       ].freeze
 
+      # Define category display order
+      CATEGORY_ORDER = [
+        'ESPRESSO HOT',
+        'ESPRESSO ICED',
+        'COLD BREW',
+        'DRIP COFFEE',
+        'POUR OVER',
+        'MATCHA',
+        'NON COFFEE/TEA',
+        'CREMES',
+        'BREAKFAST/TOAST',
+        'FRENCH TOAST',
+        'BAGELS',
+        'SANDWICHES',
+        'BURGERS',
+        'MAINS',
+        'SMOOTHIE BOWLS',
+        'SIDES',
+        'DESSERTS',
+        'MARKETPLACE'
+      ].freeze
+
       # GET /api/v1/menu?store_id=1
       # Returns cached menu from database (synced from Rista)
       def index
@@ -151,6 +173,12 @@ module Api
             name: category.name,
             items: items.map { |item| transform_menu_item(item) }
           }
+        end
+
+        # Sort categories by defined order
+        categories.sort_by! do |cat|
+          index = CATEGORY_ORDER.index(cat[:name])
+          index || 999 # Put unknown categories at the end
         end
 
         {
