@@ -120,11 +120,32 @@ module Api
         last_sync.nil? || last_sync.completed_at < 24.hours.ago
       end
 
-      def transform_menu_response(menu_items)
-        # Group items by category
-        grouped = menu_items.group_by { |item| item.category }
+      # Items to exclude from menu (internal modifiers, add-ons that appear as customizations)
+      EXCLUDED_ITEM_PATTERNS = [
+        /^(Regular|Almond|Oat)\s+Milk\s+\(/i,  # Milk options with sizes
+        /^(Hot|Cold)$/i,                        # Hot/Cold modifiers
+        /^Calibration Shot$/i,                  # Internal items
+        /^Staff\s+/i,                           # Staff items
+        /^Packaging$/i,                         # Packaging
+      ].freeze
 
-        categories = grouped.map do |category, items|
+      def should_exclude_item?(item)
+        # Exclude items with 0 price in "Other" category
+        return true if item.category&.name == 'Other' && item.price.to_f == 0
+
+        # Exclude items matching patterns
+        EXCLUDED_ITEM_PATTERNS.any? { |pattern| item.name =~ pattern }
+      end
+
+      def transform_menu_response(menu_items)
+        # Filter out internal/modifier items
+        filtered_items = menu_items.reject { |item| should_exclude_item?(item) }
+
+        # Group items by category
+        grouped = filtered_items.group_by { |item| item.category }
+
+        # Filter out empty categories and "Other" category
+        categories = grouped.reject { |category, _| category&.name == 'Other' }.map do |category, items|
           {
             id: category.id,
             name: category.name,
@@ -134,7 +155,7 @@ module Api
 
         {
           categories: categories,
-          total_items: menu_items.count,
+          total_items: filtered_items.count,
           last_synced: MenuItem.maximum(:last_synced_at)&.iso8601
         }
       end
