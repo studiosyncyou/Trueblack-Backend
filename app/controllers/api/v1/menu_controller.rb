@@ -161,6 +161,13 @@ module Api
       end
 
       def transform_menu_item(item)
+        # Derive isVeg from dietary_type (veg = true, non_veg/egg = false)
+        is_veg = case item.dietary_type
+                 when 'veg' then true
+                 when 'non_veg', 'egg' then false
+                 else item.is_veg # fallback to database field
+                 end
+
         {
           id: item.id,
           name: item.name,
@@ -168,7 +175,7 @@ module Api
           description: item.description,
           price: item.price.to_f,
           image: item.image_url,
-          isVeg: item.is_veg,
+          isVeg: is_veg,
           dietaryType: item.dietary_type,
           allergenInfo: item.allergen_info&.split(',') || [],
           isAvailable: item.is_available,
