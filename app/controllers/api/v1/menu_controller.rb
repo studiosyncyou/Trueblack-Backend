@@ -3,6 +3,15 @@ module Api
     class MenuController < ApplicationController
       skip_before_action :authenticate_user!, only: [:index, :sync, :sync_status, :cleanup_duplicates]
 
+      # Items to exclude from menu (internal modifiers, add-ons that appear as customizations)
+      EXCLUDED_ITEM_PATTERNS = [
+        /^(Regular|Almond|Oat)\s+Milk\s+\(/i,  # Milk options with sizes
+        /^(Hot|Cold)$/i,                        # Hot/Cold modifiers
+        /^Calibration Shot$/i,                  # Internal items
+        /^Staff\s+/i,                           # Staff items
+        /^Packaging$/i,                         # Packaging
+      ].freeze
+
       # GET /api/v1/menu?store_id=1
       # Returns cached menu from database (synced from Rista)
       def index
@@ -119,15 +128,6 @@ module Api
         last_sync = MenuSyncLog.successful.order(completed_at: :desc).first
         last_sync.nil? || last_sync.completed_at < 24.hours.ago
       end
-
-      # Items to exclude from menu (internal modifiers, add-ons that appear as customizations)
-      EXCLUDED_ITEM_PATTERNS = [
-        /^(Regular|Almond|Oat)\s+Milk\s+\(/i,  # Milk options with sizes
-        /^(Hot|Cold)$/i,                        # Hot/Cold modifiers
-        /^Calibration Shot$/i,                  # Internal items
-        /^Staff\s+/i,                           # Staff items
-        /^Packaging$/i,                         # Packaging
-      ].freeze
 
       def should_exclude_item?(item)
         # Exclude items with 0 price in "Other" category
